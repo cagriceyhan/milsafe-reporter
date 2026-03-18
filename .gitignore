@@ -1,0 +1,4 @@
+__pycache__/
+*.xml
+*_report.md
+.env

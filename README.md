@@ -1,31 +1,62 @@
-OpenVAS XML to Professional Report Generator (with Gemini AI)
+MILSAFE - AI Powered Vulnerability Reporting Engine
+MILSAFE, siber güvenlik tarama araçlarından (Nmap, Nessus, OpenVAS, Acunetix) elde edilen karmaşık XML verilerini analiz eden ve yapay zeka desteğiyle ISO 27001 standartlarında profesyonel denetim raporları sunan bir otomasyon aracıdır.
 
-Bu araç, OpenVAS (GVM) üzerinden alınan karmaşık XML tarama sonuçlarını, Google Gemini 2.0 Flash modelini kullanarak hem teknik ekiplerin hem de yöneticilerin anlayabileceği profesyonel bir siber güvenlik raporuna dönüştürür.
+Öne Çıkan Özellikler
+Çoklu Araç Desteği: Nmap, Nessus, OpenVAS ve Acunetix çıktılarını otomatik olarak tanır ve ayrıştırır.
 
+Yapay Zeka Entegrasyonu: Google Gemini AI kullanarak teknik bulguları yönetici özetleri ve çözüm önerilerine dönüştürür.
 
-Özellikler : 
+ISO 27001 Uyumluluğu: Bulguları doğrudan Bilgi Güvenliği Yönetim Sistemi kontrolleriyle eşleştirir.
 
-AI Destekli Analiz: Zafiyetleri sadece listelemez, "Nedir?", "Tehlikesi Nedir?" ve "Nasıl Çözülür?" sorularına mantıklı cevaplar üretir.
+Dinamik Raporlama: Girdi dosyasına göre otomatik isimlendirme yaparak Markdown (.md) formatında profesyonel raporlar üretir.
 
-Dinamik Raporlama: Girdi dosyasının adına göre (örn: deneme.xml -> deneme_report.md) otomatik isimlendirme yapar.
+Hızlı Kurulum: Bağımlılıkları optimize edilmiş, taşınabilir yapı.
 
-Güvenli Yapı: API anahtarınızı kodun içinde değil, çevresel değişkenlerde (environment variables) saklar.
+Teknik Gereksinimler ve Kurulum
+Proje, bağımlılık çakışmalarını önlemek için Python sanal ortamı (venv) üzerinde çalışacak şekilde tasarlanmıştır.
 
-Hızlı ve Hafif: Sadece Python ve temel kütüphanelerle çalışır.
+Depoyu Klonlayın:
 
+Bash
+git clone https://github.com/cagriceyhan/milsafe-reporter.git
+cd milsafe-reporter
+Sanal Ortamı Kurun ve Aktif Edin:
 
-Kurulum ve Kullanım :
+Bash
+# Linux / MacOS
+python3 -m venv venv
+source venv/bin/activate
 
-Sisteminizde Python 3.x yüklü olmalıdır. Gerekli kütüphaneyi şu komutla kurabilirsiniz:
-pip install requests
+# Windows (PowerShell)
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+Bağımlılıkları Yükleyin:
 
-API Anahtarını Tanımlama
-Bu araç Google Gemini API kullanır. Google AI Studio üzerinden ücretsiz bir API anahtarı aldıktan sonra terminalinize şu komutu girin:
+Bash
+pip install -r requirements.txt
+Kullanım
+Uygulamayı çalıştırmadan önce Google AI Studio üzerinden aldığınız API anahtarını sisteme tanıtmanız gerekmektedir.
+
+1. API Anahtarını Tanımlama
+Bash
 # Linux / MacOS
 export GEMINI_API_KEY="BURAYA_API_ANAHTARINIZI_YAZIN"
+
 # Windows (PowerShell)
 $env:GEMINI_API_KEY="BURAYA_API_ANAHTARINIZI_YAZIN"
+2. Analizi Başlatma
+Taramadan elde ettiğiniz XML dosyasını proje dizinine kopyalayın ve aşağıdaki komutu çalıştırın:
 
-Çalıştırma
-Taramadan elde ettiğiniz .xml dosyasını proje klasörüne atın ve şu komutu çalıştırın:
-python3 report_gen.py dosya_adiniz.xml
+Bash
+python3 report_gen.py hedef_dosya.xml
+Proje Yapısı
+report_gen.py: Ana motor ve API entegrasyonu.
+
+requirements.txt: Gerekli Python kütüphanelerinin listesi.
+
+.gitignore: Gereksiz dosyaların (venv, pycache) depoya yüklenmesini engelleyen yapılandırma.
+
+README.md: Proje dokümantasyonu.
+
+Geliştirici
+Çağrı Ceyhan (0xCC)

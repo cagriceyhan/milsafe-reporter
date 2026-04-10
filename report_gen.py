@@ -10,19 +10,90 @@ URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lat
 def get_vulnerabilities(xml_text):
     root = ET.fromstring(xml_text)
     vulns = []
+    scan_method = "Bilinmeyen Tarama"
+
+    if root.tag == 'nmaprun':
+        scan_method = "Nmap (Script/Port Taraması)" if root.find(".//script") is not None else "Nmap (Hızlı Port Taraması)"
+    elif root.find(".//result") is not None:
+        scan_method = "OpenVAS / GVM (Kapsamlı Kurumsal Zafiyet Taraması)"
+    elif root.tag == 'NessusClientData_v2':
+        scan_method = "Nessus (Profesyonel Zafiyet Taraması)"
+    elif root.tag == 'Scan' and 'Acunetix' in xml_text[:500]:
+        scan_method = "Acunetix (Web Uygulama Güvenlik Taraması)"
+    else:
+        scan_method = "Genel XML / Bilinmeyen Araç (Otomatik Analiz)"
+
     for result in root.findall(".//result"):
         severity_node = result.find("severity")
         severity = float(severity_node.text) if severity_node is not None and severity_node.text else 0
         if severity >= 4.0:
             vulns.append({
+                "source": "OpenVAS",
                 "ip": result.find(".//host").text if result.find(".//host") is not None else "N/A",
                 "port": result.find(".//port").text if result.find(".//port") is not None else "N/A",
                 "name": result.find("name").text if result.find("name") is not None else "N/A",
                 "cvss": severity,
-                "detail": result.find("description").text[:500] if result.find("description") is not None else "N/A",
-                "solution": result.find("solution").text if result.find("solution") is not None else "N/A"
+                "detail": result.find("description").text[:500] if result.find("description") is not None else "N/A"
             })
-    return vulns
+
+    for host in root.findall(".//host"):
+        ip = host.find(".//address").get("addr") if host.find(".//address") is not None else "N/A"
+        for port_node in host.findall(".//port"):
+            port_id = port_node.get("portid")
+            for script in port_node.findall(".//script"):
+                vulns.append({
+                    "source": "Nmap Script",
+                    "ip": ip,
+                    "port": port_id,
+                    "name": script.get("id"),
+                    "cvss": "Nmap/Vuln Data",
+                    "detail": script.get("output")[:500] if script.get("output") else "Detay yok"
+                })
+            if not port_node.findall(".//script") and port_node.find("state").get("state") == "open":
+                vulns.append({
+                    "source": "Nmap Port",
+                    "ip": ip,
+                    "port": port_id,
+                    "name": port_node.find("service").get("name") if port_node.find("service") is not None else "Unknown",
+                    "cvss": "Açık Port",
+                    "detail": "Servis aktif, potansiyel zayıflık analizi gerekli."
+                })
+
+    for item in root.findall(".//ReportItem"):
+        severity_val = item.get("severity")
+        if severity_val and int(severity_val) >= 2: 
+            vulns.append({
+                "source": "Nessus",
+                "ip": item.find("../").get("name") if item.find("../") is not None else "N/A",
+                "port": item.get("port"),
+                "name": item.get("pluginName"),
+                "cvss": item.find("cvss_base_score").text if item.find("cvss_base_score") is not None else severity_val,
+                "detail": item.find("description").text[:500] if item.find("description") is not None else "N/A"
+            })
+
+    for alert in root.findall(".//Vulnerability"):
+        vulns.append({
+            "source": "Acunetix",
+            "ip": "Web Target",
+            "port": "80/443",
+            "name": alert.find("Name").text if alert.find("Name") is not None else "N/A",
+            "cvss": alert.find("Severity").text if alert.find("Severity") is not None else "N/A",
+            "detail": alert.find("Description").text[:500] if alert.find("Description") is not None else "N/A"
+        })
+
+    if not vulns:
+        for node in root.iter():
+            if any(key in node.tag.lower() for key in ["vuln", "alert", "issue", "finding"]):
+                vulns.append({
+                    "source": "Otomatik Keşif (Genel)",
+                    "ip": "Bilinmiyor",
+                    "port": "N/A",
+                    "name": node.tag,
+                    "cvss": "Analiz Ediliyor",
+                    "detail": node.text[:300] if node.text else "Veri çekilemedi"
+                })
+
+    return {"method": scan_method, "data": vulns}
 
 try:
     if not API_KEY:
@@ -36,25 +107,39 @@ try:
     with open(xml_filename, 'r', encoding="utf-8") as f:
         xml_content = f.read()
     
-    data = get_vulnerabilities(xml_content)
-    print(f"--- Rapor Hazırlanıyor... ---")
+    extraction = get_vulnerabilities(xml_content)
+    scan_method = extraction["method"]
+    vuln_data = extraction["data"]
+
+    if not vuln_data:
+        print("UYARI: XML içinde analiz edilecek bulgu bulunamadı.")
+        sys.exit(0)
+
+    print(f"--- Metodoloji: {scan_method} ---")
+    print(f"--- {len(vuln_data)} adet bulgu analiz ediliyor... ---")
     
     payload = {
         "contents": [{
             "parts": [{
                 "text": f"""
-                Sen kıdemli bir Siber Güvenlik Danışmanı ve Analistisin. 
-                Aşağıdaki OpenVAS tarama verilerini kullanarak, hem teknik ekibin hem de teknik bilgisi olmayan bir yöneticinin anlayabileceği, akademik ve profesyonel bir 'Zafiyet Analiz ve İyileştirme Raporu' oluştur.
+                Sen; CISSP, OSCP ve CISA sertifikalı kıdemli bir Siber Güvenlik Denetçisisin. 
+                Sana iletilen teknik verileri kullanarak ISO 27001 standartlarında bir rapor hazırla.
 
-                Raporun yapısı tam olarak şu şekilde olmalı:
-                1. **Yönetici Özeti:** Sistemin genel güvenlik durumunu 2-3 cümleyle özetle.
-                2. **Risk ve Öncelik Tablosu:** Zafiyetleri; Adı, Kritiklik Seviyesi, Port ve Varsa CVE Numarası şeklinde bir Markdown tablosunda göster.
-                3. **Detaylı Analiz ve Aksiyon Planı:** Her bir zafiyet için 'Nedir?', 'Tehlikesi Nedir?' ve 'Nasıl Çözülür?' kısımlarını açıkla.
-                4. **Acil Müdahale Çağrısı:** En kritik zafiyeti vurgula.
+                **KRİTİK BİLGİ - TARAMA METODOLOJİSİ:** {scan_method}
+                Bu metodolojiye göre raporun başında 'Tarama Metodolojisi ve Kapsam' bölümü oluştur. 
+                Eğer sadece port taramasıysa risklerin teorik olduğunu, script/openvas taramasıysa bulguların doğrulandığını belirt.
 
-                DİL: Tamamen Türkçe.
-                VERİLER:
-                {data}
+                TEKNİK VERİLER:
+                {vuln_data}
+
+                RAPOR YAPISI:
+                1. Tarama Metodolojisi ve Kapsam
+                2. Yönetici Özeti (Executive Summary)
+                3. Risk ve Öncelik Matrisi (Tablo)
+                4. Derinlemesine Teknik Analiz (İstismar Senaryosu ve Çözüm dahil)
+                5. 24s / 7g / 30g Stratejik Yol Haritası
+
+                DİL: Tamamen Türkçe ve profesyonel/akademik.
                 """
             }]
         }]
@@ -66,14 +151,11 @@ try:
 
     if response.status_code == 200:
         report_text = result['candidates'][0]['content']['parts'][0]['text']
-        print("\n" + report_text)
-
         with open(output_filename, "w", encoding="utf-8") as f:
             f.write(report_text)
         print(f"\n--- İşlem Tamam! {output_filename} kaydedildi. ---")
     else:
-        print(f"Hata Kodu: {response.status_code}")
-        print(f"Mesaj: {response.text}")
+        print(f"Hata: {response.text}")
 
 except Exception as e:
     print(f"Bir hata oluştu: {e}")

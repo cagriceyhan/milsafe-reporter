@@ -1,4 +1,7 @@
 __pycache__/
-*.xml
+venv/
 *_report.md
 .env
+
+*.xml
+!openvas_test.xml

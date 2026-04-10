@@ -1,62 +1,63 @@
 MILSAFE - AI Powered Vulnerability Reporting Engine
-MILSAFE, siber güvenlik tarama araçlarından (Nmap, Nessus, OpenVAS, Acunetix) elde edilen karmaşık XML verilerini analiz eden ve yapay zeka desteğiyle ISO 27001 standartlarında profesyonel denetim raporları sunan bir otomasyon aracıdır.
+MILSAFE, siber güvenlik tarama araçlarından (Nmap, Nessus, OpenVAS, Acunetix) elde edilen XML tabanlı teknik verileri analiz ederek, Google Gemini yapay zeka desteği ile ISO 27001 ve NIST standartlarında profesyonel denetim raporları üreten bir otomasyon sistemidir.
 
-Öne Çıkan Özellikler
-Çoklu Araç Desteği: Nmap, Nessus, OpenVAS ve Acunetix çıktılarını otomatik olarak tanır ve ayrıştırır.
+Teknik Özellikler
+Otomatik Araç Tespiti: Girdi olarak verilen XML dosyasının yapısına göre tarama aracını (Nmap, Nessus, OpenVAS veya Acunetix) otomatik olarak tanımlar.
 
-Yapay Zeka Entegrasyonu: Google Gemini AI kullanarak teknik bulguları yönetici özetleri ve çözüm önerilerine dönüştürür.
+Yapay Zeka Analizi: Google Gemini 1.5 Flash modelini kullanarak teknik zafiyetleri yönetici özeti, risk matrisi ve stratejik yol haritası gibi bölümlere dönüştürür.
 
-ISO 27001 Uyumluluğu: Bulguları doğrudan Bilgi Güvenliği Yönetim Sistemi kontrolleriyle eşleştirir.
+Rapor Formatı: Çıktıları Markdown (.md) formatında üretir ve otomatik olarak isimlendirir.
 
-Dinamik Raporlama: Girdi dosyasına göre otomatik isimlendirme yaparak Markdown (.md) formatında profesyonel raporlar üretir.
+Modüler Yapı: Bağımsız fonksiyonlar sayesinde yeni tarama araçlarının entegrasyonuna açıktır.
 
-Hızlı Kurulum: Bağımlılıkları optimize edilmiş, taşınabilir yapı.
+Kurulum ve Konfigürasyon
+Sistemin kurulumu için Python 3.x yüklü olmalıdır. Bağımlılık çakışmalarını önlemek amacıyla sanal ortam (venv) kullanılması zorunludur.
 
-Teknik Gereksinimler ve Kurulum
-Proje, bağımlılık çakışmalarını önlemek için Python sanal ortamı (venv) üzerinde çalışacak şekilde tasarlanmıştır.
-
-Depoyu Klonlayın:
-
+1. Deponun Yerel Ortama Aktarılması
 Bash
 git clone https://github.com/cagriceyhan/milsafe-reporter.git
 cd milsafe-reporter
-Sanal Ortamı Kurun ve Aktif Edin:
-
+2. Sanal Ortamın Hazırlanması
 Bash
-# Linux / MacOS
+# Sanal ortam oluşturma
 python3 -m venv venv
+
+# Sanal ortamın aktif edilmesi (Linux/MacOS)
 source venv/bin/activate
 
-# Windows (PowerShell)
-python -m venv venv
+# Sanal ortamın aktif edilmesi (Windows PowerShell)
 .\venv\Scripts\Activate.ps1
-Bağımlılıkları Yükleyin:
-
+3. Bağımlılıkların Yüklenmesi
 Bash
 pip install -r requirements.txt
-Kullanım
-Uygulamayı çalıştırmadan önce Google AI Studio üzerinden aldığınız API anahtarını sisteme tanıtmanız gerekmektedir.
+4. Çevresel Değişkenlerin Tanımlanması
+Güvenlik protokolleri gereği API anahtarı kod içerisine yazılmamalıdır. Bunun yerine terminal üzerinden çevresel değişken (environment variable) olarak tanımlanmalıdır:
 
-1. API Anahtarını Tanımlama
 Bash
 # Linux / MacOS
-export GEMINI_API_KEY="BURAYA_API_ANAHTARINIZI_YAZIN"
+export GEMINI_API_KEY="AIzaSy..."
 
 # Windows (PowerShell)
-$env:GEMINI_API_KEY="BURAYA_API_ANAHTARINIZI_YAZIN"
-2. Analizi Başlatma
-Taramadan elde ettiğiniz XML dosyasını proje dizinine kopyalayın ve aşağıdaki komutu çalıştırın:
+$env:GEMINI_API_KEY="AIzaSy..."
+Kullanım Rehberi
+Analiz işlemini başlatmak için tarama sonucunu içeren XML dosyasını proje dizinine ekledikten sonra şu komutu çalıştırınız:
 
 Bash
-python3 report_gen.py hedef_dosya.xml
-Proje Yapısı
-report_gen.py: Ana motor ve API entegrasyonu.
+python3 report_gen.py tarama_sonucu.xml
+Komut çalıştırıldığında sistem şu aşamaları izler:
 
-requirements.txt: Gerekli Python kütüphanelerinin listesi.
+XML verisindeki kritik bulguları ayrıştırır.
 
-.gitignore: Gereksiz dosyaların (venv, pycache) depoya yüklenmesini engelleyen yapılandırma.
+Teknik verileri Gemini API üzerinden analiz eder.
 
-README.md: Proje dokümantasyonu.
+Çıktı olarak tarama_sonucu_report.md dosyasını oluşturur.
 
-Geliştirici
-Çağrı Ceyhan (0xCC)
+Dosya Yapısı
+report_gen.py: Çekirdek motor ve API entegrasyon katmanı.
+
+requirements.txt: Projenin ihtiyaç duyduğu kütüphane listesi.
+
+.gitignore: Depoya dahil edilmemesi gereken sistem dosyalarının yapılandırması.
+
+Geliştirici Bilgileri
+Çağrı Ceyhan
